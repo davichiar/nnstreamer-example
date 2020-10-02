@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -77,6 +78,9 @@ public class NNStreamerActivity extends Activity implements
     private ArrayList<Integer> resultArrayX = new ArrayList();
     private ArrayList<Integer> resultArrayY = new ArrayList();
 
+    private SharedPreferences sharedPref;
+    private String strUP = "", strDOWN = "", strLEFT = "", strRIGHT = "";
+
     /* 기본 세팅 (권한 설정, 타이머 시작) */
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -98,6 +102,11 @@ public class NNStreamerActivity extends Activity implements
                 }, PERMISSION_REQUEST_ALL);
             return;
         }
+        SharedPreferences sf = getSharedPreferences("sFile",MODE_PRIVATE);
+        strUP = sf.getString("up","");
+        strDOWN = sf.getString("down","");
+        strLEFT = sf.getString("left","");
+        strRIGHT = sf.getString("right","");
 
         /* 액티비티 설정, 타이머 시작 */
         initActivity();
@@ -139,6 +148,15 @@ public class NNStreamerActivity extends Activity implements
         stopPipelineTimer();
         stopTimerTask();
         nativeFinalize();
+
+        SharedPreferences sharedPreferences = getSharedPreferences("sFile",MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString("up",strUP);
+        editor.putString("down",strDOWN);
+        editor.putString("left",strLEFT);
+        editor.putString("right",strRIGHT);
+
+        editor.commit();
     }
 
     /* 타이머 시작, 제스처 판단 (왼쪽, 오른쪽, 위, 아래) */
@@ -417,6 +435,9 @@ public class NNStreamerActivity extends Activity implements
         enableButton(false);
 
         initialized = true;
+
+        /* 손 감지를 바로 시작한다. */
+        buttonModel2.performClick();
     }
 
     /**
