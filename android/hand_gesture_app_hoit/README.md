@@ -1,117 +1,212 @@
-# Android GUI NNStreamer Application Examples
+# NNStreamer Tutorial for Hand Gesture app
 
-## Prerequisite
 
-We assume that you want to deploy a NNStreamer-based application on your own Android/ARM64bit target device.
-Also, we assume that you already have experienced Android application developments with Android Studio.
+```sh
+- https://github.com/nnstreamer/nnstreamer-example/tree/master/android/example_app
 
- * Host PC:
-   * OS: Ubuntu 16.04 / 18.04 x86_64 LTS
-   * Android Studio: Ubuntu version (However, the Window version will be compatible.)
- * Target Device:
-   * CPU Architecture: ARM 64bit (aarch64)
-   * Android SDK: Min version 24 (Nougat)
-   * Android NDK: Use default ndk-bundle in Android Studio
-   * GStreamer: gstreamer-1.0-android-universal-1.16.0
-
-## Build example
-
-We provide various Android examples such as nnstreamer-ssd, nnstreamer-multi, capi-sample and so on. In this guide, we are going to build `NNStreamer-SSD`, which is simple object detection example with TF-Lite model. We built an example using GStreamer tutorials and camera2 source for Android.
-- [GStreamer tutorials](https://gitlab.freedesktop.org/gstreamer/gst-docs/)
-- [Camera2 source for Android](https://justinjoy9to5.blogspot.com/2017/10/gstreamer-camera-2-source-for-android.html)
-
-![ssd-example screenshot](screenshot/screenshot_ssd.jpg)
-
-#### Setup Android Studio
-
-To build a NNStreamer-based application, you should download Android Studio and setup environment variables for NNStreamer. Please see the details [here](https://github.com/nnstreamer/nnstreamer/blob/master/api/android/README.md).
-
-#### Download NNStreamer Example source code
-
-```bash
-$ cd $ANDROID_DEV_ROOT/workspace
-$ git clone https://github.com/nnstreamer/nnstreamer-example.git
+We assume that you want to deploy a NNStreamer-based application on your own Android/ARM64bit target device. Also, we assume that you already have experienced Android application developments with Android Studio.
+- Host PC : 
+  -OS: Ubuntu 18.04 x86_64 LTS
+  -VM: VMware Workstation 16 Player
+  -Android Studio: Ubuntu version (However, the Window version will be compatible.)
+- Target Device:
+  - CPU : ARM 64bit (aarch64)
+  - SDK : Min version 24 (Nougat)
+  - ndroid NDK: Android NDK, Revision 18b (January 2019)
+  - GStreamer : gstreamer-1.0-android-universal-1.15.1.tar.bz2
+  
 ```
 
-Extract external libraries into common directory.
 
-* [extfiles.tar.xz](common/jni/extfiles.tar.xz) includes external library such as 'ahc'.
+```sh
 
-* [tensorflow-lite-1.13.1.tar.xz](https://raw.githubusercontent.com/nnstreamer/nnstreamer-android-resource/master/external/tensorflow-lite-1.13.1.tar.xz) includes the libraries and header files of tensorflow-lite.
+# NDK download url : https://developer.android.com/ndk/downloads/older_releases.html
+NDK : Android NDK, Revision 18b (January 2019)
 
-```
-$ cd $ANDROID_DEV_ROOT/workspace/nnstreamer-example/android/example_app/common/jni
-$ tar xJf ./extfiles.tar.xz
-$ curl -O https://raw.githubusercontent.com/nnstreamer/nnstreamer-android-resource/master/external/tensorflow-lite-1.13.1.tar.xz
-$ tar xJf ./tensorflow-lite-1.13.1.tar.xz # Check tensorflow-lite version and extract prebuilt library
-$ ls ahc tensorflow-lite
-```
+# GStreamer download url : https://gstreamer.freedesktop.org/data/pkg/android/
+GStreamer : gstreamer-1.0-android-universal-1.15.1.tar.bz2
 
-#### Install built NNStreamer `aar` file
+# Git Clone download url : git clone https://github.com/nnstreamer/nnstreamer
+NNStreamer : cd nnstreamer / git reset --hard 6b27767fc0af96dcfd7dd3f84eef215bd50a7aaa
 
-To build example application, you should install pre-built NNStreamer Android Archive package(e.g. nnstreamer-[DATE].arr) into `android/example_app/api-sample/libs` folder as below. To build this, please refer [this guide](https://github.com/nnstreamer/nnstreamer/tree/master/api/android).
-
-
-```bash
-$ cd $NNSTREAMER_ROOT/android_lib
-$ cp nnstreamer-[DATE].aar $ANDROID_DEV_ROOT/workspace/nnstreamer-example/android/example_app/api-sample/libs
+# Git Clone download url : https://github.com/nnstreamer/nnstreamer-example
+NNStreamer-example : cd nnstreamer-example
 ```
 
-#### Build `capi-sample` application
 
-Please see [this guide](./capi-sample/README.md)
+```sh
+- environment PATH 
 
-#### Build the source code with Android Studio
+$ export ANDROID_DEV_ROOT=$HOME/Android           # Set your own path (default location: $HOME/Android)
+$ mkdir -p $ANDROID_DEV_ROOT/tools/sdk
+$ mkdir -p $ANDROID_DEV_ROOT/tools/ndk
+$ mkdir -p $ANDROID_DEV_ROOT/gstreamer-1.0
+$ mkdir -p $ANDROID_DEV_ROOT/workspace
+$ nano ~/.bashrc
 
+export JAVA_HOME=/opt/android-studio/jre            # JRE path in Android Studio
+export ANDROID_DEV_ROOT=$HOME/android               # Set your own path (default location: "$HOME/Android".)
+
+export ANDROID_SDK=$ANDROID_DEV_ROOT/tools/sdk
+export ANDROID_NDK=$ANDROID_DEV_ROOT/tools/ndk
+export ANDROID_SDK_ROOT=$ANDROID_SDK
+export ANDROID_NDK_ROOT=$ANDROID_NDK
+export GSTREAMER_ROOT_ANDROID=$ANDROID_DEV_ROOT/gstreamer-1.0
+export NNSTREAMER_ROOT=$ANDROID_DEV_ROOT/workspace/nnstreamer
+```
+
+```sh
+- 설치 (Android Studio Install 생략)
+
+# install
+sudo apt install subversion curl pkg-config
+
+# licence
+cd $ANDROID_SDK/tools/bin
+yes | ./sdkmanager --licenses
+
+# NDK download url : https://developer.android.com/ndk/downloads/older_releases.html
+NDK : Android NDK, Revision 18b (January 2019)
+
+# GStreamer download url : https://gstreamer.freedesktop.org/data/pkg/android/
+GStreamer : gstreamer-1.0-android-universal-1.15.1.tar.bz2
+mkdir $ANDROID_DEV_ROOT/gstreamer-1.0
+cd $ANDROID_DEV_ROOT/gstreamer-1.0 
+- move downloaded Gstreamer file in to gstreamer-1.0
+
+# Modify content 
+$GSTREAMER_ROOT_ANDROID/{Target-ABI}/share/gst-android/ndk-build/gstreamer-1.0.mk
+
+@@ -127,2 +127,2 @@
+GSTREAMER_PLUGINS_CLASSES    := $(strip \
+            $(subst $(GSTREAMER_NDK_BUILD_PATH),, \
+            $(foreach plugin,$(GSTREAMER_PLUGINS), \
+-           $(wildcard $(GSTREAMER_NDK_BUILD_PATH)$(plugin)/*.java))))
++           $(wildcard $(GSTREAMER_NDK_BUILD_PATH)/$(plugin)/*.java))))
+
+GSTREAMER_PLUGINS_WITH_CLASSES := $(strip \
+            $(subst $(GSTREAMER_NDK_BUILD_PATH),, \
+            $(foreach plugin, $(GSTREAMER_PLUGINS), \
+-           $(wildcard $(GSTREAMER_NDK_BUILD_PATH)$(plugin)))))
++           $(wildcard $(GSTREAMER_NDK_BUILD_PATH)/$(plugin)))))
+
+@@ -257,1 +257,1 @@
+
+copyjavasource_$(TARGET_ARCH_ABI):
+  $(hide)$(call host-mkdir,$(GSTREAMER_JAVA_SRC_DIR)/org/freedesktop/gstreamer)
+    $(hide)$(foreach plugin,$(GSTREAMER_PLUGINS_WITH_CLASSES), \
+        $(call host-mkdir,$(GSTREAMER_JAVA_SRC_DIR)/org/freedesktop/gstreamer/$(plugin)) && ) echo Done mkdir
+    $(hide)$(foreach file,$(GSTREAMER_PLUGINS_CLASSES), \
+-       $(call host-cp,$(GSTREAMER_NDK_BUILD_PATH)$(file),$(GSTREAMER_JAVA_SRC_DIR)/org/freedesktop/gstreamer/$(file)) && ) echo Done cp
++       $(call host-cp,$(GSTREAMER_NDK_BUILD_PATH)/$(file),$(GSTREAMER_JAVA_SRC_DIR)/org/freedesktop/gstreamer/$(file)) && ) echo Done cp
+
+
+$GSTREAMER_ROOT_ANDROID/{Target-ABI}/share/gst-android/ndk-build/gstreamer_android-1.0.c.in
+@@ -592,9 +592,10 @@
+
+   if (!klass) {
+     __android_log_print (ANDROID_LOG_ERROR, "GStreamer",
+         "Could not retrieve class org.freedesktop.gstreamer.GStreamer");
+-    return 0;
+-  }
+-  if ((*env)->RegisterNatives (env, klass, native_methods,
++
++    if ((*env)->ExceptionCheck (env))
++      (*env)->ExceptionClear (env);
++  } else if ((*env)->RegisterNatives (env, klass, native_methods,
+           G_N_ELEMENTS (native_methods))) {
+     __android_log_print (ANDROID_LOG_ERROR, "GStreamer",
+         "Could not register native methods for org.freedesktop.gstreamer.GStreamer");
+
+
+# Git Clone download url : git clone https://github.com/nnstreamer/nnstreamer
+cd $ANDROID_DEV_ROOT/workspace
+git clone https://github.com/nnstreamer/nnstreamer.git
+cd nnstreamer
+git reset --hard 6b27767fc0af96dcfd7dd3f84eef215bd50a7aaa
+
+# NNStramer Build
+cd $NNSTREAMER_ROOT
+bash ./api/android/build-android-lib.sh
+```
+
+
+```sh
+# nnstreamer example download : https://github.com/nnstreamer/nnstreamer-example/tree/master/android/example_app
+cd $ANDROID_DEV_ROOT/workspace
+git clone https://github.com/nnstreamer/nnstreamer-example.git
+
+# example setting
+cd $ANDROID_DEV_ROOT/workspace/nnstreamer-example/android/example_app/common/jni
+tar xJf ./extfiles.tar.xz
+curl -O https://raw.githubusercontent.com/nnstreamer/nnstreamer-android-resource/master/external/tensorflow-lite-1.13.1.tar.xz
+tar xJf ./tensorflow-lite-1.13.1.tar.xz # Check tensorflow-lite version and extract prebuilt library
+ls ahc tensorflow-lite
+
+# copy
+cd $NNSTREAMER_ROOT/android_lib
+cp nnstreamer-[DATE].aar $ANDROID_DEV_ROOT/workspace/nnstreamer-example/android/example_app/api-sample/libs
+cp nnstreamer-[DATE].aar $ANDROID_DEV_ROOT/workspace/nnstreamer-example/android/example_app/use-camera-with-nnstreamer-java-api/libs
+
+# build, copy
+# https://github.com/nnstreamer/nnstreamer-example/blob/master/android/example_app/capi-sample/README.md
+cd $NNSTREAMER_ROOT
+bash ./api/android/build-android-lib.sh --enable_nnfw=no --enable_snpe=no
+
+cd $NNSTREAMER_ROOT/android_lib
+cp nnstreamer-native-[DATE].zip $ANDROID_DEV_ROOT/workspace/nnstreamer-example/android/example_app/capi-sample/src
+cd $ANDROID_DEV_ROOT/workspace/nnstreamer-example/android/example_app/capi-sample/src
+unzip nnstreamer-native-[DATE].zip
+```
+
+
+```sh
+# https://github.com/nnstreamer/nnstreamer-example/tree/master/android/example_app
 Run Android Studio.
-
-```bash
-# If Android Studio was installed under the directory '/opt'
-$ /opt/android-studio/bin/studio.sh
-```
-
 Import project in Android Studio.
+Check a target NDK version (File - Project Structure)
+Install
 
-![studio-import screenshot](screenshot/screenshot_studio_import_project.png)
 
-Check a target SDK version (File - Project Structure)
+- Modify `build.gradle` 
+- Modify default NDK PATH
 
-![studio-setting-1 screenshot](screenshot/screenshot_studio_setting_1.png)
+build.gradle
+buildscript {
+    repositories {
+        jcenter() // or mavenCentral()
+        mavenCentral()
+        maven{url "https://maven.google.com"}
+        google()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.5.1'
+    }
+}
+```
+```sh
+development Status
+### 2020.09.29
 
-Change a default directory of SDK.
-- Change SDK directory (File - Settings - Appearance & Behavior - System Settings - Android SDK - SDK Tools)
-  - ```$ANDROID_DEV_ROOT/tools/sdk```
+- Android development settings for all team members completed
+- Solve related issues for example-tutorial (revert back to what was working normally)
 
-![studio-setting-2 screenshot](screenshot/screenshot_studio_setting_2.png)
+### 2020.09.30
 
-Build project.
+- After deciding to attach the hand-landmark model that exists in the Google Media Pipeline to the hand-detection model, development begins.
+- Starting to get coordinate Values from NNstreamer-example application
 
-![studio-apk screenshot](screenshot/screenshot_studio_apk.png)
+### 2020.10.01
 
-#### Install and Run NNStreamer App
+- Success in getting coordinates
+- Tried agetting coordinates using the landmark model, but failed-> Change to swipe format using hand-detection coordinates
 
-You can install your _NNStreamer App_ on your Android device using Android Studio or __adb__ command as below.
-```bash
-$ cd $ANDROID_DEV_ROOT/workspace/nnstreamer-example/android/example_app/nnstreamer-ssd
-$ cd build/outputs/apk/debug         # Build as debug mode
-$ adb install nnstreamer-ssd-debug.apk
+### 2020.10.02
+
+- Swipe up, down, left, and right recognition success
+- Command mapping for each gesture
+
+
 ```
 
-When first launching `NNStreamer App` on your Android device, Application automatically downloads a SSD model and label file into your target device.
 
-If your device does not access the Internet, you can download these files from [Our model repository](http://nnsuite.mooo.com/warehouse/nnmodels/) on your PC and put them in the internal storage of your Android target device as below.
-
-```
-{INTERNAL_STORAGE}/nnstreamer/tflite_model/box_priors.txt
-{INTERNAL_STORAGE}/nnstreamer/tflite_model/coco_labels_list.txt
-{INTERNAL_STORAGE}/nnstreamer/tflite_model/ssd_mobilenet_v2_coco.tflite
-...
-```
-
-## Terminology
-* AHC: Android Hardware Camera2
-* JNI: Java Native Interface
-* SSD: Single Shot MultiBox Detector
-* ABI: Application Binary Interface
-* API: Application Programming Interface
-* Cairo: A 2D graphics library with support for multiple output device
