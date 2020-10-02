@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -20,8 +21,13 @@ import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -35,6 +41,8 @@ import org.freedesktop.gstreamer.GStreamerSurfaceView;
 import java.io.File;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -75,6 +83,7 @@ public class NNStreamerActivity extends Activity implements
     private ToggleButton buttonModel2;
     private ToggleButton buttonModel3;
     private ToggleButton buttonModel4;
+    private Button buttonModel5;
     private TimerTask timerTask;
     private Timer timer = new Timer();
 
@@ -90,13 +99,11 @@ public class NNStreamerActivity extends Activity implements
     private ArrayList<Integer> resultArrayX = new ArrayList();
     private ArrayList<Integer> resultArrayY = new ArrayList();
 
-    private SharedPreferences sharedPref;
     private String strUP = "", strDOWN = "", strLEFT = "", strRIGHT = "";
 
-    private PackageManager packageManager;
-
-    private List CardName, CardList;
-    private CardView cardviewLayout1, cardviewLayout2;
+    private List CardList;
+    private LinearLayout sub_pipeline_area, main_pipeline_area, plus_pipeline_area;
+    private Spinner up_spinner, down_spinner, left_spinner, right_spinner;
     private int layout_cnt = 1;
 
     /* 기본 세팅 (권한 설정, 타이머 시작) */
@@ -168,14 +175,16 @@ public class NNStreamerActivity extends Activity implements
 
         SharedPreferences sharedPreferences = getSharedPreferences("sFile",MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString("up",strUP);
-        editor.putString("down",strDOWN);
-        editor.putString("left",strLEFT);
-        editor.putString("right",strRIGHT);
+
+        editor.putString("up", Integer.toString(up_spinner.getSelectedItemPosition()));
+        editor.putString("down", Integer.toString(down_spinner.getSelectedItemPosition()));
+        editor.putString("left", Integer.toString(left_spinner.getSelectedItemPosition()));
+        editor.putString("right", Integer.toString(right_spinner.getSelectedItemPosition()));
 
         editor.commit();
     }
 
+    /* 두 번 이전 버튼 누를시 완전 종료 */
     @Override
     public void onBackPressed() {
         long tempTime = System.currentTimeMillis();
@@ -183,6 +192,21 @@ public class NNStreamerActivity extends Activity implements
 
         if (0 <= intervalTime && FINISH_INTERVAL_TIME >= intervalTime)
         {
+            timer.cancel();
+            stopPipelineTimer();
+            stopTimerTask();
+            nativeFinalize();
+
+            SharedPreferences sharedPreferences = getSharedPreferences("sFile",MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+
+            editor.putString("up", Integer.toString(up_spinner.getSelectedItemPosition()));
+            editor.putString("down", Integer.toString(down_spinner.getSelectedItemPosition()));
+            editor.putString("left", Integer.toString(left_spinner.getSelectedItemPosition()));
+            editor.putString("right", Integer.toString(right_spinner.getSelectedItemPosition()));
+
+            editor.commit();
+
             finishAffinity();
             System.runFinalization();
             System.exit(0);
@@ -217,7 +241,7 @@ public class NNStreamerActivity extends Activity implements
                             if (resultArrayX.get(0) > resultArrayX.get(resultArrayX.size() - 1)) {
                                 resultText = "Left : " + resultArrayX.get(0) + " " + resultArrayY.get(0) + " " +
                                         resultArrayX.get(resultArrayX.size() - 1) + " " + resultArrayY.get(resultArrayY.size() - 1) + "";
-                                schedule_cnt = 1;
+                                schedule_cnt = 3;
                                 viewDesc.setText(resultText);
                                 appRunFunction(schedule_cnt);
                                 return;
@@ -225,7 +249,7 @@ public class NNStreamerActivity extends Activity implements
                             else {
                                 resultText = "Right : " + resultArrayX.get(0) + " " + resultArrayY.get(0) + " " +
                                         resultArrayX.get(resultArrayX.size() - 1) + " " + resultArrayY.get(resultArrayY.size() - 1) + "";
-                                schedule_cnt = 2;
+                                schedule_cnt = 4;
                                 viewDesc.setText(resultText);
                                 appRunFunction(schedule_cnt);
                                 return;
@@ -235,7 +259,7 @@ public class NNStreamerActivity extends Activity implements
                             if (resultArrayY.get(0) > resultArrayY.get(resultArrayX.size() - 1)) {
                                 resultText = "Up : " + resultArrayX.get(0) + " " + resultArrayY.get(0) + " " +
                                         resultArrayX.get(resultArrayX.size() - 1) + " " + resultArrayY.get(resultArrayY.size() - 1) + "";
-                                schedule_cnt = 3;
+                                schedule_cnt = 1;
                                 viewDesc.setText(resultText);
                                 appRunFunction(schedule_cnt);
                                 return;
@@ -243,7 +267,7 @@ public class NNStreamerActivity extends Activity implements
                             else {
                                 resultText = "Down : " + resultArrayX.get(0) + " " + resultArrayY.get(0) + " " +
                                         resultArrayX.get(resultArrayX.size() - 1) + " " + resultArrayY.get(resultArrayY.size() - 1) + "";
-                                schedule_cnt = 4;
+                                schedule_cnt = 2;
                                 viewDesc.setText(resultText);
                                 appRunFunction(schedule_cnt);
                                 return;
@@ -293,6 +317,7 @@ public class NNStreamerActivity extends Activity implements
 	}
     }
 
+    /* 제스처에 따라 어플리케이션 실행 */
     private void appRunFunction(int cnt) {
         if (layout_cnt == 1) {
             timer.cancel();
@@ -301,16 +326,32 @@ public class NNStreamerActivity extends Activity implements
             timer = new Timer();
             startTimerTask();
 
-            String packageName = CardList.get(6).toString();
-            try {
-                Intent intent = getPackageManager().getLaunchIntentForPackage(packageName);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(intent);
+            int mode = 0;
+            if (schedule_cnt == 1) {
+                mode = up_spinner.getSelectedItemPosition();
             }
-            catch (Exception e) {
-                String url = "market://details?id=" + packageName;
-                Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                startActivity(i);
+            else if (schedule_cnt == 2) {
+                mode = down_spinner.getSelectedItemPosition();
+            }
+            else if (schedule_cnt == 3) {
+                mode = left_spinner.getSelectedItemPosition();
+            }
+            else if (schedule_cnt == 4) {
+                mode = right_spinner.getSelectedItemPosition();
+            }
+
+            if (mode != 0) {
+                String packageName = CardList.get(mode).toString();
+                try {
+                    Intent intent = getPackageManager().getLaunchIntentForPackage(packageName);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                }
+                catch (Exception e) {
+                    String url = "market://details?id=" + packageName;
+                    Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                    startActivity(i);
+                }
             }
         }
     }
@@ -390,9 +431,17 @@ public class NNStreamerActivity extends Activity implements
 
         switch (viewId) {
             case R.id.main_button_m1:
-                cardviewLayout1.setVisibility(View.GONE);
-                cardviewLayout2.setVisibility(View.VISIBLE);
+                sub_pipeline_area.setVisibility(View.GONE);
+                main_pipeline_area.setVisibility(View.GONE);
+                plus_pipeline_area.setVisibility(View.VISIBLE);
                 layout_cnt = 0;
+                break;
+
+            case R.id.main_button_m5:
+                sub_pipeline_area.setVisibility(View.VISIBLE);
+                main_pipeline_area.setVisibility(View.VISIBLE);
+                plus_pipeline_area.setVisibility(View.GONE);
+                layout_cnt = 1;
                 break;
 
             case R.id.main_button_m3:
@@ -517,46 +566,121 @@ public class NNStreamerActivity extends Activity implements
         strLEFT = sf.getString("left","");
         strRIGHT = sf.getString("right","");
 
-        cardviewLayout1 = (CardView) findViewById(R.id.cardviewLayout1);
-        cardviewLayout1.setVisibility(View.VISIBLE);
+        sub_pipeline_area = (LinearLayout) findViewById(R.id.sub_pipeline_area);
+        sub_pipeline_area.setVisibility(View.VISIBLE);
 
-        cardviewLayout2 = (CardView) findViewById(R.id.cardviewLayout2);
-        cardviewLayout2.setVisibility(View.GONE);
+        main_pipeline_area = (LinearLayout) findViewById(R.id.main_pipeline_area);
+        main_pipeline_area.setVisibility(View.VISIBLE);
 
-        CardName = new ArrayList();
+        plus_pipeline_area = (LinearLayout) findViewById(R.id.plus_pipeline_area);
+        plus_pipeline_area.setVisibility(View.GONE);
+
+        up_spinner = (Spinner) findViewById(R.id.up_spinner);
+        List<String> list1 = new ArrayList<String>();
+        list1.add("UP 제스처 : 선택 안함");
+        list1.add("UP 제스처 : 카메라 앱 실행");
+        list1.add("UP 제스처 : 갤러리 앱 실행");
+        list1.add("UP 제스처 : 메시지 앱 실행");
+        list1.add("UP 제스처 : 플레이스토어 실행");
+        list1.add("UP 제스처 : 설정 앱 실행");
+        list1.add("UP 제스처 : 카카오톡 앱 실행");
+        list1.add("UP 제스처 : 네이버 앱 실행");
+        list1.add("UP 제스처 : 유튜브 앱 실행");
+        list1.add("UP 제스처 : 멜론 앱 실행");
+        list1.add("UP 제스처 : 페이스북 앱 실행");
+        list1.add("UP 제스처 : 구글 메일 앱 실행");
+
+        ArrayAdapter<String> categoriesAdapter1 = new ArrayAdapter<String>(NNStreamerActivity.this, android.R.layout.simple_spinner_item, list1);
+        up_spinner.setAdapter(categoriesAdapter1);
+        up_spinner.setBackgroundColor(Color.DKGRAY);
+        if (strUP != "") {
+            up_spinner.setSelection(Integer.parseInt(strUP));
+        }
+
+        down_spinner = (Spinner) findViewById(R.id.down_spinner);
+        List<String> list2 = new ArrayList<String>();
+        list2.add("DOWN 제스처 : 선택 안함");
+        list2.add("DOWN 제스처 : 카메라 앱 실행");
+        list2.add("DOWN 제스처 : 갤러리 앱 실행");
+        list2.add("DOWN 제스처 : 메시지 앱 실행");
+        list2.add("DOWN 제스처 : 플레이스토어 실행");
+        list2.add("DOWN 제스처 : 설정 앱 실행");
+        list2.add("DOWN 제스처 : 카카오톡 앱 실행");
+        list2.add("DOWN 제스처 : 네이버 앱 실행");
+        list2.add("DOWN 제스처 : 유튜브 앱 실행");
+        list2.add("DOWN 제스처 : 멜론 앱 실행");
+        list2.add("DOWN 제스처 : 페이스북 앱 실행");
+        list2.add("DOWN 제스처 : 구글 메일 앱 실행");
+
+        ArrayAdapter<String> categoriesAdapter2 = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, list2);
+        down_spinner.setAdapter(categoriesAdapter2);
+        down_spinner.setBackgroundColor(Color.DKGRAY);
+        if (strDOWN != "") {
+            down_spinner.setSelection(Integer.parseInt(strDOWN));
+        }
+
+        left_spinner = (Spinner) findViewById(R.id.left_spinner);
+        List<String> list3 = new ArrayList<String>();
+        list3.add("LEFT 제스처 : 선택 안함");
+        list3.add("LEFT 제스처 : 카메라 앱 실행");
+        list3.add("LEFT 제스처 : 갤러리 앱 실행");
+        list3.add("LEFT 제스처 : 메시지 앱 실행");
+        list3.add("LEFT 제스처 : 플레이스토어 실행");
+        list3.add("LEFT 제스처 : 설정 앱 실행");
+        list3.add("LEFT 제스처 : 카카오톡 앱 실행");
+        list3.add("LEFT 제스처 : 네이버 앱 실행");
+        list3.add("LEFT 제스처 : 유튜브 앱 실행");
+        list3.add("LEFT 제스처 : 멜론 앱 실행");
+        list3.add("LEFT 제스처 : 페이스북 앱 실행");
+        list3.add("LEFT 제스처 : 구글 메일 앱 실행");
+
+        ArrayAdapter<String> categoriesAdapter3 = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, list3);
+        left_spinner.setAdapter(categoriesAdapter3);
+        left_spinner.setBackgroundColor(Color.DKGRAY);
+        if (strLEFT != "") {
+            left_spinner.setSelection(Integer.parseInt(strLEFT));
+        }
+
+        right_spinner = (Spinner) findViewById(R.id.right_spinner);
+        List<String> list4 = new ArrayList<String>();
+        list4.add("RIGHT 제스처 : 선택 안함");
+        list4.add("RIGHT 제스처 : 카메라 앱 실행");
+        list4.add("RIGHT 제스처 : 갤러리 앱 실행");
+        list4.add("RIGHT 제스처 : 메시지 앱 실행");
+        list4.add("RIGHT 제스처 : 플레이스토어 실행");
+        list4.add("RIGHT 제스처 : 설정 앱 실행");
+        list4.add("RIGHT 제스처 : 카카오톡 앱 실행");
+        list4.add("RIGHT 제스처 : 네이버 앱 실행");
+        list4.add("RIGHT 제스처 : 유튜브 앱 실행");
+        list4.add("RIGHT 제스처 : 멜론 앱 실행");
+        list4.add("RIGHT 제스처 : 페이스북 앱 실행");
+        list4.add("RIGHT 제스처 : 구글 메일 앱 실행");
+
+        ArrayAdapter<String> categoriesAdapter4 = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, list4);
+        right_spinner.setAdapter(categoriesAdapter4);
+        right_spinner.setBackgroundColor(Color.DKGRAY);
+
+        if (strRIGHT != "") {
+            right_spinner.setSelection(Integer.parseInt(strRIGHT));
+        }
+
+        buttonModel5 = (Button) findViewById(R.id.main_button_m5);
+        buttonModel5.setOnClickListener(this);
+        buttonModel5.setText("이전 화면으로 돌아가기");
+
         CardList = new ArrayList();
 
-        CardName.add("카메라");
+        CardList.add("none");
         CardList.add("com.sec.android.app.camera");
-
-        CardName.add("갤러리");
         CardList.add("com.sec.android.gallery3d");
-
-        CardName.add("메시지");
         CardList.add("com.samsung.android.messaging");
-
-        CardName.add("플레이스토어");
         CardList.add("com.android.vending");
-
-        CardName.add("설정");
         CardList.add("com.android.settings");
-
-        CardName.add("카카오톡");
         CardList.add("com.kakao.talk");
-
-        CardName.add("네이버");
         CardList.add("com.nhn.android.search");
-
-        CardName.add("유튜브");
         CardList.add("com.google.android.youtube");
-
-        CardName.add("멜론");
         CardList.add("com.iloen.melon");
-
-        CardName.add("페이스북");
         CardList.add("com.facebook.katana");
-
-        CardName.add("G메일");
         CardList.add("com.google.android.gm");
 
         /* surface 카메라 */
