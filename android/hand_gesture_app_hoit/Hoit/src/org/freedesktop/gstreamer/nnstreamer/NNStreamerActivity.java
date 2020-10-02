@@ -60,7 +60,6 @@ public class NNStreamerActivity extends Activity implements
     private DownloadModel downloadTask = null;
     private ArrayList<String> downloadList = new ArrayList<>();
 
-    private TextView viewTitle;
     private TextView viewDesc;
     private ImageButton buttonCam;
     private ToggleButton buttonModel1;
@@ -376,15 +375,13 @@ public class NNStreamerActivity extends Activity implements
 
         setContentView(R.layout.main);
 
-        viewTitle = (TextView) findViewById(R.id.main_text_title);
         viewDesc = (TextView) findViewById(R.id.main_text_desc);
 
         buttonCam = (ImageButton) findViewById(R.id.main_button_cam);
         buttonCam.setOnClickListener(this);
 
         /* 모델에 대한 이벤트 수신기 추가 */
-        String model1 = nativeGetName(1, (1 << 1));
-        model1 = "얼굴 탐지";
+        String model1 = "얼굴 탐지";
         buttonModel1 = (ToggleButton) findViewById(R.id.main_button_m1);
         buttonModel1.setOnClickListener(this);
         buttonModel1.setText(model1);
@@ -398,8 +395,7 @@ public class NNStreamerActivity extends Activity implements
         buttonModel2.setTextOn(model2);
         buttonModel2.setTextOff(model2);
 
-        String model3 = nativeGetName(1, (1 << 3));
-        model3 = "객체 탐지";
+        String model3 = "객체 탐지";
         buttonModel3 = (ToggleButton) findViewById(R.id.main_button_m3);
         buttonModel3.setOnClickListener(this);
         buttonModel3.setText(model3);
