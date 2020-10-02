@@ -1,71 +1,117 @@
-# SSAFY-SR 프로젝트
+# Android GUI NNStreamer Application Examples
 
-## [2020.09.15.화 - 2020.09.18.금] git setting, 튜토리얼 실행
-```sh
-1. git fork 진행
-2. 팀원 초대
-3. README.md 생성
+## Prerequisite
+
+We assume that you want to deploy a NNStreamer-based application on your own Android/ARM64bit target device.
+Also, we assume that you already have experienced Android application developments with Android Studio.
+
+ * Host PC:
+   * OS: Ubuntu 16.04 / 18.04 x86_64 LTS
+   * Android Studio: Ubuntu version (However, the Window version will be compatible.)
+ * Target Device:
+   * CPU Architecture: ARM 64bit (aarch64)
+   * Android SDK: Min version 24 (Nougat)
+   * Android NDK: Use default ndk-bundle in Android Studio
+   * GStreamer: gstreamer-1.0-android-universal-1.16.0
+
+## Build example
+
+We provide various Android examples such as nnstreamer-ssd, nnstreamer-multi, capi-sample and so on. In this guide, we are going to build `NNStreamer-SSD`, which is simple object detection example with TF-Lite model. We built an example using GStreamer tutorials and camera2 source for Android.
+- [GStreamer tutorials](https://gitlab.freedesktop.org/gstreamer/gst-docs/)
+- [Camera2 source for Android](https://justinjoy9to5.blogspot.com/2017/10/gstreamer-camera-2-source-for-android.html)
+
+![ssd-example screenshot](screenshot/screenshot_ssd.jpg)
+
+#### Setup Android Studio
+
+To build a NNStreamer-based application, you should download Android Studio and setup environment variables for NNStreamer. Please see the details [here](https://github.com/nnstreamer/nnstreamer/blob/master/api/android/README.md).
+
+#### Download NNStreamer Example source code
+
+```bash
+$ cd $ANDROID_DEV_ROOT/workspace
+$ git clone https://github.com/nnstreamer/nnstreamer-example.git
 ```
 
-### [2020.09.16.수] 온라인 멘토링 정리
-```sh
-#### 개발 방향 조언
-시간이 부족하므로 퀄리티도 좋지만 그보다 일단 완성도 있는 앱을 개발하는 방향
+Extract external libraries into common directory.
 
-* gstreamer란?
-멀티미디어 처리 파이프라인 플랫폼. NNstreamer는 플러그인처럼 사용된다.
+* [extfiles.tar.xz](common/jni/extfiles.tar.xz) includes external library such as 'ahc'.
 
-* 앞으로 진행할 내용
-지스트리머 튜토리얼 진행할 것 
-https://gstreamer.freedesktop.org/documentation/tutorials/basic/index.html?gi-language=c
+* [tensorflow-lite-1.13.1.tar.xz](https://raw.githubusercontent.com/nnstreamer/nnstreamer-android-resource/master/external/tensorflow-lite-1.13.1.tar.xz) includes the libraries and header files of tensorflow-lite.
 
-튜토리얼을 진행하면서 파이프라인, 엘리먼트, 패드의 개념과 사용법 익힐 것
-
-* 추가조사내용
-엘리먼트는 input과 output을 가진 파이프라인의 컴포넌트라고 볼 수 있다.
-pad는 네트워크 포트 같은 개념이다. 엘리먼트에서 나오는 데이터를 처리한다.
-
-* NN스트리머
-https://github.com/nnstreamer/nnstreamer-android-resource 참고할 것.
-텐서라는 인풋을 받아서 텐서라는 아웃풋 내는 엘리먼트를 파이프라인에 추가할 수 있도록 하는 플러그인.
-(지스트리머 레퍼런스 있으니 파이프파인 제작을 지스트리머로 마스터하고 NN스트리머를 진행할 것!)
-
-* 앞으로 어떻게 작업하는지
-fork를 떠서 자기 깃을 만들고 풀 리퀘스트로 작업할 것.
-한 pr당 하나의 커밋만! (리뷰 가능 사이즈 목적)
-
-팀장이 example_app 폴더에 작업폴더를 만들고 풀 리퀘스트도 거기에만 할 것.
-그래야 망가질 경우 한 폴더만 망가져서 안전함.
-
-우리가 올린 pr 에 대해 리뷰를 달 것. 팀원 모두 해당. 또한 영문으로 작성할 것.
-merge는 관리 측에서 approve 두개 이상일 시 간단한 리뷰 후 허가해주신다고 말씀하심.
-
-구글에 미디어 파이프라는 프로젝트가 있음
-mediapipe
-
-git -> models -> 이것들 참고해서 만들면 도움이 될 것.
-
-init하는 pr 하고 리드미 작성. 팀원들이 approve 하면 merge해주신다고 말씀하심.
-
-Slack에 질문을 올릴 것.
-
-#### Q&A
-- 엘리먼트 사이 패드들은 라이브러리 형태로 주어짐.
-플러그인에서 demux mux converter 이런 것들 확인해볼 것.
-레퍼런스에 필요한 정보 다 제공함.
-- 1일 1커밋 권장!
-
-#### 개선사항
-gstreamer tutorial을 시작하여 파이프라인에 대해 이해하도록 계획 변경
-
-#### 느낀점
-많은 질문에도 불구하고 친절히, 상세히 피드백과 조언을 해주셔서 정말 보람있는 멘토링이 되었던 것 같습니다.
-반드시 기대에 부응하겠습니다! 멘토링에 시간 내주셔서 정말 감사드립니다!!!
-많이 배워서 꼭 성장하겠습니다.
+```
+$ cd $ANDROID_DEV_ROOT/workspace/nnstreamer-example/android/example_app/common/jni
+$ tar xJf ./extfiles.tar.xz
+$ curl -O https://raw.githubusercontent.com/nnstreamer/nnstreamer-android-resource/master/external/tensorflow-lite-1.13.1.tar.xz
+$ tar xJf ./tensorflow-lite-1.13.1.tar.xz # Check tensorflow-lite version and extract prebuilt library
+$ ls ahc tensorflow-lite
 ```
 
+#### Install built NNStreamer `aar` file
 
-### [2020.09.18.금] SSAFY Issue 등록
-```sh
-https://github.com/nnstreamer/nnstreamer/issues/2753
+To build example application, you should install pre-built NNStreamer Android Archive package(e.g. nnstreamer-[DATE].arr) into `android/example_app/api-sample/libs` folder as below. To build this, please refer [this guide](https://github.com/nnstreamer/nnstreamer/tree/master/api/android).
+
+
+```bash
+$ cd $NNSTREAMER_ROOT/android_lib
+$ cp nnstreamer-[DATE].aar $ANDROID_DEV_ROOT/workspace/nnstreamer-example/android/example_app/api-sample/libs
 ```
+
+#### Build `capi-sample` application
+
+Please see [this guide](./capi-sample/README.md)
+
+#### Build the source code with Android Studio
+
+Run Android Studio.
+
+```bash
+# If Android Studio was installed under the directory '/opt'
+$ /opt/android-studio/bin/studio.sh
+```
+
+Import project in Android Studio.
+
+![studio-import screenshot](screenshot/screenshot_studio_import_project.png)
+
+Check a target SDK version (File - Project Structure)
+
+![studio-setting-1 screenshot](screenshot/screenshot_studio_setting_1.png)
+
+Change a default directory of SDK.
+- Change SDK directory (File - Settings - Appearance & Behavior - System Settings - Android SDK - SDK Tools)
+  - ```$ANDROID_DEV_ROOT/tools/sdk```
+
+![studio-setting-2 screenshot](screenshot/screenshot_studio_setting_2.png)
+
+Build project.
+
+![studio-apk screenshot](screenshot/screenshot_studio_apk.png)
+
+#### Install and Run NNStreamer App
+
+You can install your _NNStreamer App_ on your Android device using Android Studio or __adb__ command as below.
+```bash
+$ cd $ANDROID_DEV_ROOT/workspace/nnstreamer-example/android/example_app/nnstreamer-ssd
+$ cd build/outputs/apk/debug         # Build as debug mode
+$ adb install nnstreamer-ssd-debug.apk
+```
+
+When first launching `NNStreamer App` on your Android device, Application automatically downloads a SSD model and label file into your target device.
+
+If your device does not access the Internet, you can download these files from [Our model repository](http://nnsuite.mooo.com/warehouse/nnmodels/) on your PC and put them in the internal storage of your Android target device as below.
+
+```
+{INTERNAL_STORAGE}/nnstreamer/tflite_model/box_priors.txt
+{INTERNAL_STORAGE}/nnstreamer/tflite_model/coco_labels_list.txt
+{INTERNAL_STORAGE}/nnstreamer/tflite_model/ssd_mobilenet_v2_coco.tflite
+...
+```
+
+## Terminology
+* AHC: Android Hardware Camera2
+* JNI: Java Native Interface
+* SSD: Single Shot MultiBox Detector
+* ABI: Application Binary Interface
+* API: Application Programming Interface
+* Cairo: A 2D graphics library with support for multiple output device
