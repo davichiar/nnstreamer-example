@@ -47,8 +47,9 @@
                     android:id="@+id/main_button_cam"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:src="@android:drawable/ic_menu_camera"
+                    android:src="@drawable/menu_refresh"
                     android:layout_alignParentRight="true"
+                    android:clickable="true"
                     android:visibility="visible"/>
             </RelativeLayout>
 
@@ -57,7 +58,7 @@
                 android:layout_height="50dp"
                 android:orientation="horizontal"
                 android:background="@drawable/rect"
-                android:layout_marginBottom="30dp"
+                android:layout_marginBottom="20dp"
                 android:layout_marginLeft="10dp"
                 android:layout_marginRight="10dp"
                 android:layout_marginTop="30dp"

@@ -70,7 +70,6 @@ public class NNStreamerActivity extends Activity implements
     private Timer timer = new Timer();
 
     private RelativeLayout main_surface_area;
-    private int switch_cnt = 1;
     private int temp_cnt = 0;
     private int rectX = 0, rectY = 0, rectW = 0, rectH = 0;
     private int print_cnt = 0;
@@ -293,22 +292,19 @@ public class NNStreamerActivity extends Activity implements
         }
 
         switch (viewId) {
-            case R.id.main_button_m4:
-                if (switch_cnt == 0) {
-                    switch_cnt = 1;
-                    main_surface_area.setVisibility(View.VISIBLE);
-                }
-                else {
-                    switch_cnt = 0;
-                    main_surface_area.setVisibility(View.GONE);
-                }
+            case R.id.main_button_m1:
                 break;
+
+            case R.id.main_button_m3:
+                break;
+
+            case R.id.main_button_m4:
+                break;
+
             case R.id.main_button_cam:
                 useFrontCamera = !useFrontCamera;
-                /* 중단 */
-            case R.id.main_button_m1:
+
             case R.id.main_button_m2:
-            case R.id.main_button_m3:
                 stopTimerTask();
                 startTimerTask();
                 startPipeline(PIPELINE_ID);
@@ -381,28 +377,28 @@ public class NNStreamerActivity extends Activity implements
         buttonCam.setOnClickListener(this);
 
         /* 모델에 대한 이벤트 수신기 추가 */
-        String model1 = "얼굴 탐지";
+        String model1 = "Hand Gesture 설정 (상, 하, 좌, 우)";
         buttonModel1 = (ToggleButton) findViewById(R.id.main_button_m1);
         buttonModel1.setOnClickListener(this);
         buttonModel1.setText(model1);
         buttonModel1.setTextOn(model1);
         buttonModel1.setTextOff(model1);
 
-        String model2 = "손 움직임 탐지";
+        String model2 = "Hand Detecting Switch (Default : On)";
         buttonModel2 = (ToggleButton) findViewById(R.id.main_button_m2);
         buttonModel2.setOnClickListener(this);
         buttonModel2.setText(model2);
         buttonModel2.setTextOn(model2);
         buttonModel2.setTextOff(model2);
 
-        String model3 = "객체 탐지";
+        String model3 = "Background 실행 (종료시, 음성인식으로 어플 실행)";
         buttonModel3 = (ToggleButton) findViewById(R.id.main_button_m3);
         buttonModel3.setOnClickListener(this);
         buttonModel3.setText(model3);
         buttonModel3.setTextOn(model3);
         buttonModel3.setTextOff(model3);
 
-        String model4 = "카메라 숨기기 / 보이기";
+        String model4 = "현재 화면 스크린샷 찍기 (캡쳐)";
         buttonModel4 = (ToggleButton) findViewById(R.id.main_button_m4);
         buttonModel4.setOnClickListener(this);
         buttonModel4.setText(model4);
@@ -480,10 +476,7 @@ public class NNStreamerActivity extends Activity implements
                 pipelineTimer = null;
                 if (pipelineId == PIPELINE_ID) {
                     /* 여기서 파이프라인 옵션 설정 */
-                    if (buttonModel1.isChecked()) option |= (1 << 1);
                     if (buttonModel2.isChecked()) option |= (1 << 2);
-                    if (buttonModel3.isChecked()) option |= (1 << 3);
-                    if (buttonModel4.isChecked()) option |= (1 << 4);
                     if (useFrontCamera) option |= (1 << 8);
                 }
 
