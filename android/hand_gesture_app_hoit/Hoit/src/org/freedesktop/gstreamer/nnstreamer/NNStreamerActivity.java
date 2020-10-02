@@ -3,12 +3,18 @@ package org.freedesktop.gstreamer.nnstreamer;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ComponentName;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Environment;
+import android.support.v7.widget.CardView;
 import android.text.Html;
 import android.util.Log;
 import android.view.SurfaceHolder;
@@ -27,7 +33,9 @@ import org.freedesktop.gstreamer.GStreamer;
 import org.freedesktop.gstreamer.GStreamerSurfaceView;
 
 import java.io.File;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -70,16 +78,26 @@ public class NNStreamerActivity extends Activity implements
     private TimerTask timerTask;
     private Timer timer = new Timer();
 
+    private final long FINISH_INTERVAL_TIME = 2000;
+    private long backPressedTime = 0;
+    static final int REQUEST_SELECT_CONTACT = 1;
+
     private RelativeLayout main_surface_area;
     private int temp_cnt = 0;
     private int rectX = 0, rectY = 0, rectW = 0, rectH = 0;
-    private int print_cnt = 0;
+    private int print_cnt = 0, schedule_cnt = 0;
     private String resultText = "";
     private ArrayList<Integer> resultArrayX = new ArrayList();
     private ArrayList<Integer> resultArrayY = new ArrayList();
 
     private SharedPreferences sharedPref;
     private String strUP = "", strDOWN = "", strLEFT = "", strRIGHT = "";
+
+    private PackageManager packageManager;
+
+    private List CardName, CardList;
+    private CardView cardviewLayout1, cardviewLayout2;
+    private int layout_cnt = 1;
 
     /* 기본 세팅 (권한 설정, 타이머 시작) */
     @Override
@@ -102,11 +120,6 @@ public class NNStreamerActivity extends Activity implements
                 }, PERMISSION_REQUEST_ALL);
             return;
         }
-        SharedPreferences sf = getSharedPreferences("sFile",MODE_PRIVATE);
-        strUP = sf.getString("up","");
-        strDOWN = sf.getString("down","");
-        strLEFT = sf.getString("left","");
-        strRIGHT = sf.getString("right","");
 
         /* 액티비티 설정, 타이머 시작 */
         initActivity();
@@ -118,10 +131,12 @@ public class NNStreamerActivity extends Activity implements
     public void onPause() {
         super.onPause();
 
-        stopPipelineTimer();
-        stopTimerTask();
-        startTimerTask();
-        nativePause();
+        if (schedule_cnt == 0) {
+            stopPipelineTimer();
+            stopTimerTask();
+            startTimerTask();
+            nativePause();
+        }
     }
 
     /* 재개 할때 사용하는 함수 */
@@ -129,12 +144,14 @@ public class NNStreamerActivity extends Activity implements
     public void onResume() {
         super.onResume();
 
-        /* 파이프라인 시작 */
-        if (initialized) {
-            if (downloadTask != null && downloadTask.isProgress()) {
-                Log.d(TAG, "모델 파일 다운로드 시작");
-            } else {
-                startPipeline(PIPELINE_ID);
+        if (schedule_cnt == 0) {
+            /* 파이프라인 시작 */
+            if (initialized) {
+                if (downloadTask != null && downloadTask.isProgress()) {
+                    Log.d(TAG, "모델 파일 다운로드 시작");
+                } else {
+                    startPipeline(PIPELINE_ID);
+                }
             }
         }
     }
@@ -159,6 +176,24 @@ public class NNStreamerActivity extends Activity implements
         editor.commit();
     }
 
+    @Override
+    public void onBackPressed() {
+        long tempTime = System.currentTimeMillis();
+        long intervalTime = tempTime - backPressedTime;
+
+        if (0 <= intervalTime && FINISH_INTERVAL_TIME >= intervalTime)
+        {
+            finishAffinity();
+            System.runFinalization();
+            System.exit(0);
+        }
+        else
+        {
+            backPressedTime = tempTime;
+            Toast.makeText(getApplicationContext(), " 한 번 더 누르면 종료됩니다.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     /* 타이머 시작, 제스처 판단 (왼쪽, 오른쪽, 위, 아래) */
     private void startTimerTask(){
 	timerTask=new TimerTask(){
@@ -172,6 +207,7 @@ public class NNStreamerActivity extends Activity implements
 
                 if (rectX == 0 && rectY == 0 && rectW == 0 && rectH == 0 && print_cnt == 0 && temp_cnt < 10) {
                     temp_cnt += 1;
+                    schedule_cnt = 0;
                 }
                 else if (rectX == 0 && rectY == 0 && rectW == 0 && rectH == 0 && print_cnt == 0) {
                     print_cnt = 1;
@@ -181,20 +217,36 @@ public class NNStreamerActivity extends Activity implements
                             if (resultArrayX.get(0) > resultArrayX.get(resultArrayX.size() - 1)) {
                                 resultText = "Left : " + resultArrayX.get(0) + " " + resultArrayY.get(0) + " " +
                                         resultArrayX.get(resultArrayX.size() - 1) + " " + resultArrayY.get(resultArrayY.size() - 1) + "";
+                                schedule_cnt = 1;
+                                viewDesc.setText(resultText);
+                                appRunFunction(schedule_cnt);
+                                return;
                             }
                             else {
                                 resultText = "Right : " + resultArrayX.get(0) + " " + resultArrayY.get(0) + " " +
                                         resultArrayX.get(resultArrayX.size() - 1) + " " + resultArrayY.get(resultArrayY.size() - 1) + "";
+                                schedule_cnt = 2;
+                                viewDesc.setText(resultText);
+                                appRunFunction(schedule_cnt);
+                                return;
                             }
                         }
                         else {
                             if (resultArrayY.get(0) > resultArrayY.get(resultArrayX.size() - 1)) {
                                 resultText = "Up : " + resultArrayX.get(0) + " " + resultArrayY.get(0) + " " +
                                         resultArrayX.get(resultArrayX.size() - 1) + " " + resultArrayY.get(resultArrayY.size() - 1) + "";
+                                schedule_cnt = 3;
+                                viewDesc.setText(resultText);
+                                appRunFunction(schedule_cnt);
+                                return;
                             }
                             else {
                                 resultText = "Down : " + resultArrayX.get(0) + " " + resultArrayY.get(0) + " " +
                                         resultArrayX.get(resultArrayX.size() - 1) + " " + resultArrayY.get(resultArrayY.size() - 1) + "";
+                                schedule_cnt = 4;
+                                viewDesc.setText(resultText);
+                                appRunFunction(schedule_cnt);
+                                return;
                             }
                         }
                     }
@@ -216,10 +268,15 @@ public class NNStreamerActivity extends Activity implements
                         resultArrayX.add(rectX + (int)(rectW/2));
                         resultArrayY.add(rectY + (int)(rectH/2));
                     }
+                    schedule_cnt = 0;
                 }
                 else if ( !(rectX == 0 && rectY == 0 && rectW == 0 && rectH == 0) && print_cnt == 0) {
                     resultArrayX.add(rectX + (int)(rectW/2));
                     resultArrayY.add(rectY + (int)(rectH/2));
+                    schedule_cnt = 0;
+                }
+                else {
+                    schedule_cnt = 0;
                 }
 
                 viewDesc.setText(resultText);
@@ -234,6 +291,28 @@ public class NNStreamerActivity extends Activity implements
 	    timerTask.cancel();
 	    timerTask=null;
 	}
+    }
+
+    private void appRunFunction(int cnt) {
+        if (layout_cnt == 1) {
+            timer.cancel();
+            stopTimerTask();
+
+            timer = new Timer();
+            startTimerTask();
+
+            String packageName = CardList.get(6).toString();
+            try {
+                Intent intent = getPackageManager().getLaunchIntentForPackage(packageName);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+            }
+            catch (Exception e) {
+                String url = "market://details?id=" + packageName;
+                Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                startActivity(i);
+            }
+        }
     }
 
     /**
@@ -311,9 +390,14 @@ public class NNStreamerActivity extends Activity implements
 
         switch (viewId) {
             case R.id.main_button_m1:
+                cardviewLayout1.setVisibility(View.GONE);
+                cardviewLayout2.setVisibility(View.VISIBLE);
+                layout_cnt = 0;
                 break;
 
             case R.id.main_button_m3:
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.naver.com"));
+                startActivity(intent);
                 break;
 
             case R.id.main_button_m4:
@@ -425,6 +509,55 @@ public class NNStreamerActivity extends Activity implements
 
         main_surface_area = (RelativeLayout) findViewById(R.id.main_surface_area);
         main_surface_area.setVisibility(View.VISIBLE);
+
+        /* 기존 변수 저장, 카드 뷰 업데이트 */
+        SharedPreferences sf = getSharedPreferences("sFile",MODE_PRIVATE);
+        strUP = sf.getString("up","");
+        strDOWN = sf.getString("down","");
+        strLEFT = sf.getString("left","");
+        strRIGHT = sf.getString("right","");
+
+        cardviewLayout1 = (CardView) findViewById(R.id.cardviewLayout1);
+        cardviewLayout1.setVisibility(View.VISIBLE);
+
+        cardviewLayout2 = (CardView) findViewById(R.id.cardviewLayout2);
+        cardviewLayout2.setVisibility(View.GONE);
+
+        CardName = new ArrayList();
+        CardList = new ArrayList();
+
+        CardName.add("카메라");
+        CardList.add("com.sec.android.app.camera");
+
+        CardName.add("갤러리");
+        CardList.add("com.sec.android.gallery3d");
+
+        CardName.add("메시지");
+        CardList.add("com.samsung.android.messaging");
+
+        CardName.add("플레이스토어");
+        CardList.add("com.android.vending");
+
+        CardName.add("설정");
+        CardList.add("com.android.settings");
+
+        CardName.add("카카오톡");
+        CardList.add("com.kakao.talk");
+
+        CardName.add("네이버");
+        CardList.add("com.nhn.android.search");
+
+        CardName.add("유튜브");
+        CardList.add("com.google.android.youtube");
+
+        CardName.add("멜론");
+        CardList.add("com.iloen.melon");
+
+        CardName.add("페이스북");
+        CardList.add("com.facebook.katana");
+
+        CardName.add("G메일");
+        CardList.add("com.google.android.gm");
 
         /* surface 카메라 */
         SurfaceView sv = (SurfaceView) this.findViewById(R.id.main_surface_video);

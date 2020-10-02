@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 24
+    compileSdkVersion 28
     buildToolsVersion '28.0.3'
     defaultConfig {
         applicationId "org.freedesktop.gstreamer.nnstreamer.multi"
@@ -65,6 +65,7 @@ afterEvaluate {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'com.android.support.constraint:constraint-layout:2.0.1'
     testImplementation 'junit:junit:4.12'
     implementation 'com.android.support:appcompat-v7:24.0.0'
 
