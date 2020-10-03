@@ -108,7 +108,7 @@
                     android:textColor="@color/main_button_m1_text"/>
 
                 <ToggleButton
-                    android:id="@+id/main_button_m2"
+                    android:id="@+id/main_button_m3"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
@@ -119,7 +119,7 @@
                     android:textColor="@color/main_button_m2_text"/>
 
                 <ToggleButton
-                    android:id="@+id/main_button_m3"
+                    android:id="@+id/main_button_m2"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"

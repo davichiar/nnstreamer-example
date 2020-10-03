@@ -3,21 +3,26 @@ package org.freedesktop.gstreamer.nnstreamer;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.v7.widget.CardView;
 import android.text.Html;
 import android.util.Log;
+import android.view.PixelCopy;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -38,12 +43,19 @@ import android.support.v4.content.ContextCompat;
 import org.freedesktop.gstreamer.GStreamer;
 import org.freedesktop.gstreamer.GStreamerSurfaceView;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.lang.reflect.Array;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -91,7 +103,7 @@ public class NNStreamerActivity extends Activity implements
     private long backPressedTime = 0;
     static final int REQUEST_SELECT_CONTACT = 1;
 
-    private RelativeLayout main_surface_area;
+    private RelativeLayout main_surface_area, main_root;
     private int temp_cnt = 0;
     private int rectX = 0, rectY = 0, rectW = 0, rectH = 0;
     private int print_cnt = 0, schedule_cnt = 0;
@@ -100,6 +112,7 @@ public class NNStreamerActivity extends Activity implements
     private ArrayList<Integer> resultArrayY = new ArrayList();
 
     private String strUP = "", strDOWN = "", strLEFT = "", strRIGHT = "";
+    private SurfaceView sv;
 
     private List CardList;
     private LinearLayout sub_pipeline_area, main_pipeline_area, plus_pipeline_area;
@@ -445,11 +458,18 @@ public class NNStreamerActivity extends Activity implements
                 break;
 
             case R.id.main_button_m3:
-                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.naver.com"));
-                startActivity(intent);
+                up_spinner.setSelection(0);
+                down_spinner.setSelection(0);
+                left_spinner.setSelection(0);
+                right_spinner.setSelection(0);
+                Toast.makeText(getApplicationContext(), "세팅이 초기화 되었습니다.", Toast.LENGTH_SHORT).show();
                 break;
 
             case R.id.main_button_m4:
+                String packageName = "org.freedesktop.gstreamer.nnstreamer.multi";
+                String url = "market://details?id=" + packageName;
+                Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                startActivity(i);
                 break;
 
             case R.id.main_button_cam:
@@ -542,14 +562,14 @@ public class NNStreamerActivity extends Activity implements
         buttonModel2.setTextOn(model2);
         buttonModel2.setTextOff(model2);
 
-        String model3 = "Background 실행 (종료시, 음성인식으로 어플 실행)";
+        String model3 = "Hand Gesture 세팅 초기화";
         buttonModel3 = (ToggleButton) findViewById(R.id.main_button_m3);
         buttonModel3.setOnClickListener(this);
         buttonModel3.setText(model3);
         buttonModel3.setTextOn(model3);
         buttonModel3.setTextOff(model3);
 
-        String model4 = "현재 화면 스크린샷 찍기 (캡쳐)";
+        String model4 = "NNStreamer Original App Download";
         buttonModel4 = (ToggleButton) findViewById(R.id.main_button_m4);
         buttonModel4.setOnClickListener(this);
         buttonModel4.setText(model4);
@@ -683,8 +703,10 @@ public class NNStreamerActivity extends Activity implements
         CardList.add("com.facebook.katana");
         CardList.add("com.google.android.gm");
 
+        main_root = (RelativeLayout) findViewById(R.id.main_root);
+
         /* surface 카메라 */
-        SurfaceView sv = (SurfaceView) this.findViewById(R.id.main_surface_video);
+        sv = (SurfaceView) this.findViewById(R.id.main_surface_video);
         SurfaceHolder sh = sv.getHolder();
         sh.addCallback(this);
 
