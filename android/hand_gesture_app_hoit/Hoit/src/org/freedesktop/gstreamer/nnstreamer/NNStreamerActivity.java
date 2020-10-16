@@ -123,6 +123,9 @@ public class NNStreamerActivity extends Activity implements
                 }, PERMISSION_REQUEST_ALL);
             return;
         }
+        /* Service Start */
+        Intent intent = new Intent(getApplicationContext(), NNStreamerService.class);
+        startService(intent);
 
         /* activity settings, timer starts */
         initActivity();
