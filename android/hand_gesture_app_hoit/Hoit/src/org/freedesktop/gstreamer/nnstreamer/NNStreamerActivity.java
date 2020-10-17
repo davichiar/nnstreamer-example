@@ -2,6 +2,7 @@ package org.freedesktop.gstreamer.nnstreamer;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -12,6 +13,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Environment;
+import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -37,6 +39,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import com.afollestad.materialdialogs.DialogAction;
+import com.afollestad.materialdialogs.MaterialDialog;
+import com.afollestad.materialdialogs.MaterialDialog.Builder;
+import com.afollestad.materialdialogs.Theme;
 
 public class NNStreamerActivity extends Activity implements
         SurfaceHolder.Callback,
@@ -124,6 +131,7 @@ public class NNStreamerActivity extends Activity implements
             return;
         }
         /* Service Start */
+        enableAutoStart();
         Intent intent = new Intent(getApplicationContext(), NNStreamerService.class);
         startService(intent);
 
@@ -453,10 +461,21 @@ public class NNStreamerActivity extends Activity implements
                 break;
 
             case R.id.main_button_m4:
+                Intent intent = new Intent();
+                intent.setAction("android.intent.action.MAIN");
+                intent.addCategory("android.intent.category.HOME");
+                intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS
+                        | Intent.FLAG_ACTIVITY_FORWARD_RESULT
+                        | Intent.FLAG_ACTIVITY_NEW_TASK
+                        | Intent.FLAG_ACTIVITY_PREVIOUS_IS_TOP
+                        | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+                startActivity(intent);
+                /*
                 String packageName = "org.freedesktop.gstreamer.nnstreamer.multi";
                 String url = "market://details?id=" + packageName;
                 Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                 startActivity(i);
+                 */
                 break;
 
             /* fallthrough */
@@ -557,7 +576,7 @@ public class NNStreamerActivity extends Activity implements
         buttonModel3.setTextOn(model3);
         buttonModel3.setTextOff(model3);
 
-        String model4 = "NNStreamer Original App Download";
+        String model4 = "NNStreamer 화면 전환 (서비스 유지)";
         buttonModel4 = (ToggleButton) findViewById(R.id.main_button_m4);
         buttonModel4.setOnClickListener(this);
         buttonModel4.setText(model4);
@@ -843,5 +862,33 @@ public class NNStreamerActivity extends Activity implements
         });
 
         builder.show();
+    }
+
+    private void enableAutoStart() {
+        for (Intent intent : Constants.AUTO_START_INTENTS) {
+            if (getPackageManager().resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY) != null) {
+                new Builder(this).title(R.string.enable_autostart)
+                        .content(R.string.ask_permission)
+                        .theme(Theme.LIGHT)
+                        .positiveText(getString(R.string.allow))
+                        .onPositive(new MaterialDialog.SingleButtonCallback() {
+                            @Override
+                            public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                                try {
+                                    for (Intent intent1 : Constants.AUTO_START_INTENTS)
+                                        if (NNStreamerActivity.this.getPackageManager().resolveActivity(intent1, PackageManager.MATCH_DEFAULT_ONLY)
+                                                != null) {
+                                            NNStreamerActivity.this.startActivity(intent1);
+                                            break;
+                                        }
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        })
+                        .show();
+                break;
+            }
+        }
     }
 }
