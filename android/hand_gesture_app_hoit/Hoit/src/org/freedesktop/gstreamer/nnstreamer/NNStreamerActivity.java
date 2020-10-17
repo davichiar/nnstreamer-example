@@ -138,11 +138,6 @@ public class NNStreamerActivity extends Activity implements
         /* Service Start */
         enableAutoStart();
         Intent intent = new Intent(this, NNStreamerService.class);
-        intent.putExtra("up", CardList.get(Integer.parseInt(strUP)).toString());
-        intent.putExtra("down", CardList.get(Integer.parseInt(strDOWN)).toString());
-        intent.putExtra("left", CardList.get(Integer.parseInt(strLEFT)).toString());
-        intent.putExtra("right", CardList.get(Integer.parseInt(strRIGHT)).toString());
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(intent);
         }
@@ -734,6 +729,86 @@ public class NNStreamerActivity extends Activity implements
 
         /* Start hand sensing right away. */
         buttonModel2.performClick();
+
+        up_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                SharedPreferences sharedPreferences = getSharedPreferences("sFile",MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+
+                editor.putString("up", Integer.toString(up_spinner.getSelectedItemPosition()));
+                editor.putString("down", Integer.toString(down_spinner.getSelectedItemPosition()));
+                editor.putString("left", Integer.toString(left_spinner.getSelectedItemPosition()));
+                editor.putString("right", Integer.toString(right_spinner.getSelectedItemPosition()));
+
+                editor.commit();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
+        down_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                SharedPreferences sharedPreferences = getSharedPreferences("sFile",MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+
+                editor.putString("up", Integer.toString(up_spinner.getSelectedItemPosition()));
+                editor.putString("down", Integer.toString(down_spinner.getSelectedItemPosition()));
+                editor.putString("left", Integer.toString(left_spinner.getSelectedItemPosition()));
+                editor.putString("right", Integer.toString(right_spinner.getSelectedItemPosition()));
+
+                editor.commit();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
+        left_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                SharedPreferences sharedPreferences = getSharedPreferences("sFile",MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+
+                editor.putString("up", Integer.toString(up_spinner.getSelectedItemPosition()));
+                editor.putString("down", Integer.toString(down_spinner.getSelectedItemPosition()));
+                editor.putString("left", Integer.toString(left_spinner.getSelectedItemPosition()));
+                editor.putString("right", Integer.toString(right_spinner.getSelectedItemPosition()));
+
+                editor.commit();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
+        right_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                SharedPreferences sharedPreferences = getSharedPreferences("sFile",MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+
+                editor.putString("up", Integer.toString(up_spinner.getSelectedItemPosition()));
+                editor.putString("down", Integer.toString(down_spinner.getSelectedItemPosition()));
+                editor.putString("left", Integer.toString(left_spinner.getSelectedItemPosition()));
+                editor.putString("right", Integer.toString(right_spinner.getSelectedItemPosition()));
+
+                editor.commit();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
     }
 
     /**

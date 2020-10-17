@@ -3,6 +3,7 @@ package org.freedesktop.gstreamer.nnstreamer;
 import android.app.ActivityManager;
 import android.app.Notification;
 import android.content.ComponentName;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.Nullable;
@@ -26,6 +27,7 @@ import com.sac.speech.SpeechDelegate;
 import com.sac.speech.SpeechRecognitionNotAvailable;
 import com.tbruyelle.rxpermissions.RxPermissions;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Random;
@@ -47,10 +49,6 @@ public class NNStreamerService extends Service implements SpeechDelegate, Speech
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Toast.makeText(getApplicationContext(), "NNStreamer 음성 서비스 모드 실행되었습니다.", Toast.LENGTH_SHORT).show();
-        up = intent.getStringExtra("up");
-        down = intent.getStringExtra("down");
-        left = intent.getStringExtra("left");
-        right = intent.getStringExtra("right");
 
         //TODO do something useful
         try {
@@ -126,6 +124,28 @@ public class NNStreamerService extends Service implements SpeechDelegate, Speech
             String ActivityName = componentName.getShortClassName().substring(1);
 
             if (ActivityName.equals("rg.freedesktop.gstreamer.nnstreamer.NNStreamerActivity")) {
+                /* CardList setting */
+                List CardList = new ArrayList();
+
+                CardList.add("none");
+                CardList.add("com.sec.android.app.camera");
+                CardList.add("com.sec.android.gallery3d");
+                CardList.add("com.samsung.android.messaging");
+                CardList.add("com.android.vending");
+                CardList.add("com.android.settings");
+                CardList.add("com.kakao.talk");
+                CardList.add("com.nhn.android.search");
+                CardList.add("com.google.android.youtube");
+                CardList.add("com.iloen.melon");
+                CardList.add("com.facebook.katana");
+                CardList.add("com.google.android.gm");
+
+                SharedPreferences sf = getSharedPreferences("sFile",MODE_PRIVATE);
+                up = CardList.get(Integer.parseInt(sf.getString("up",""))).toString();
+                down = CardList.get(Integer.parseInt(sf.getString("down",""))).toString();
+                left = CardList.get(Integer.parseInt(sf.getString("left",""))).toString();
+                right = CardList.get(Integer.parseInt(sf.getString("right",""))).toString();
+
                 if (result.equals("위") && !up.equals("none")) {
                     String packageName = up;
                     try {
@@ -181,6 +201,13 @@ public class NNStreamerService extends Service implements SpeechDelegate, Speech
                         i.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                         startActivity(i);
                     }
+                }
+                else if (result.equals("원본")) {
+                    String packageName = "org.freedesktop.gstreamer.nnstreamer.multi";
+                    String url = "market://details?id=" + packageName;
+                    Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                    i.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+                    startActivity(i);
                 }
                 else if (result.equals("종료")) {
                     System.exit(0);
