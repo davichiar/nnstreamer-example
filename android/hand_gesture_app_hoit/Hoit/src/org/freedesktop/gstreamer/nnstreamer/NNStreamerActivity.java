@@ -10,6 +10,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Environment;
@@ -18,6 +19,7 @@ import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -130,14 +132,26 @@ public class NNStreamerActivity extends Activity implements
                 }, PERMISSION_REQUEST_ALL);
             return;
         }
-        /* Service Start */
-        enableAutoStart();
-        Intent intent = new Intent(getApplicationContext(), NNStreamerService.class);
-        startService(intent);
-
         /* activity settings, timer starts */
         initActivity();
-        startTimerTask(); /* Plus - startTimer */
+
+        /* Service Start */
+        enableAutoStart();
+        Intent intent = new Intent(this, NNStreamerService.class);
+        intent.putExtra("up", CardList.get(Integer.parseInt(strUP)).toString());
+        intent.putExtra("down", CardList.get(Integer.parseInt(strDOWN)).toString());
+        intent.putExtra("left", CardList.get(Integer.parseInt(strLEFT)).toString());
+        intent.putExtra("right", CardList.get(Integer.parseInt(strRIGHT)).toString());
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent);
+        }
+        else {
+            startService(intent);
+        }
+
+        /* Plus - startTimer */
+        startTimerTask();
     }
 
     /* Function used when paused */
@@ -189,6 +203,9 @@ public class NNStreamerActivity extends Activity implements
         editor.putString("right", Integer.toString(right_spinner.getSelectedItemPosition()));
 
         editor.commit();
+
+        Intent intent = new Intent(this, NNStreamerService.class);
+        stopService(intent);
     }
 
     /* Pressing the previous button twice completely shuts down */
@@ -352,12 +369,13 @@ public class NNStreamerActivity extends Activity implements
                 String packageName = CardList.get(mode).toString();
                 try {
                     Intent intent = getPackageManager().getLaunchIntentForPackage(packageName);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                     startActivity(intent);
                 }
                 catch (Exception e) {
                     String url = "market://details?id=" + packageName;
                     Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                    i.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                     startActivity(i);
                 }
             }
@@ -461,21 +479,11 @@ public class NNStreamerActivity extends Activity implements
                 break;
 
             case R.id.main_button_m4:
-                Intent intent = new Intent();
-                intent.setAction("android.intent.action.MAIN");
-                intent.addCategory("android.intent.category.HOME");
-                intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS
-                        | Intent.FLAG_ACTIVITY_FORWARD_RESULT
-                        | Intent.FLAG_ACTIVITY_NEW_TASK
-                        | Intent.FLAG_ACTIVITY_PREVIOUS_IS_TOP
-                        | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
-                startActivity(intent);
-                /*
                 String packageName = "org.freedesktop.gstreamer.nnstreamer.multi";
                 String url = "market://details?id=" + packageName;
                 Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                i.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
                 startActivity(i);
-                 */
                 break;
 
             /* fallthrough */
@@ -576,7 +584,7 @@ public class NNStreamerActivity extends Activity implements
         buttonModel3.setTextOn(model3);
         buttonModel3.setTextOff(model3);
 
-        String model4 = "NNStreamer 화면 전환 (서비스 유지)";
+        String model4 = "NNStreamer Original App Download";
         buttonModel4 = (ToggleButton) findViewById(R.id.main_button_m4);
         buttonModel4.setOnClickListener(this);
         buttonModel4.setText(model4);
@@ -890,5 +898,18 @@ public class NNStreamerActivity extends Activity implements
                 break;
             }
         }
+    }
+
+    public boolean checkServiceRunning() {
+        ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+        if (manager != null) {
+            for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(
+                    Integer.MAX_VALUE)) {
+                if (getString(R.string.my_service_name).equals(service.service.getClassName())) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
