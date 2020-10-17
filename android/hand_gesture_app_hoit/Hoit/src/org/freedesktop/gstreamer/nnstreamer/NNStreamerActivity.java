@@ -471,6 +471,16 @@ public class NNStreamerActivity extends Activity implements
                 left_spinner.setSelection(0);
                 right_spinner.setSelection(0);
                 Toast.makeText(getApplicationContext(), "세팅이 초기화 되었습니다.", Toast.LENGTH_SHORT).show();
+
+                SharedPreferences sharedPreferences = getSharedPreferences("sFile",MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+
+                editor.putString("up", Integer.toString(up_spinner.getSelectedItemPosition()));
+                editor.putString("down", Integer.toString(down_spinner.getSelectedItemPosition()));
+                editor.putString("left", Integer.toString(left_spinner.getSelectedItemPosition()));
+                editor.putString("right", Integer.toString(right_spinner.getSelectedItemPosition()));
+
+                editor.commit();
                 break;
 
             case R.id.main_button_m4:
