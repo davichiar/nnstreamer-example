@@ -5,8 +5,6 @@ import android.app.Notification;
 import android.content.ComponentName;
 import android.content.SharedPreferences;
 import android.net.Uri;
-import android.os.Build;
-import android.support.annotation.Nullable;
 import android.Manifest.permission;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -34,6 +32,7 @@ import java.util.Random;
 
 import rx.functions.Action1;
 
+/* NNStreamer Voice Recognition Service */
 public class NNStreamerService extends Service implements SpeechDelegate, Speech.stopDueToDelay {
 
     public static SpeechDelegate delegate;
@@ -43,7 +42,7 @@ public class NNStreamerService extends Service implements SpeechDelegate, Speech
     @Override
     public void onCreate() {
         super.onCreate();
-        startForeground(1,new Notification()); // 추가 (9.0에서는 변경해야 함)
+        startForeground(1,new Notification());
     }
 
     @Override
@@ -284,7 +283,7 @@ public class NNStreamerService extends Service implements SpeechDelegate, Speech
 
     @Override
     public void onDestroy() {
-        // 서비스가 종료될 때 실행
+        // Service Destory
         super.onDestroy();
         stopForeground(true);
     }

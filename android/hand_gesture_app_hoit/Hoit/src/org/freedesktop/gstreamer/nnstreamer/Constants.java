@@ -4,6 +4,7 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.net.Uri;
 
+/* Intent Settings */
 public class Constants {
 
     public static final Intent[] AUTO_START_INTENTS = {

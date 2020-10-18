@@ -2,7 +2,6 @@ package org.freedesktop.gstreamer.nnstreamer;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -740,6 +739,7 @@ public class NNStreamerActivity extends Activity implements
         /* Start hand sensing right away. */
         buttonModel2.performClick();
 
+        /* Real-Time Spinner */
         up_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -760,6 +760,7 @@ public class NNStreamerActivity extends Activity implements
             }
         });
 
+        /* Real-Time Spinner */
         down_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -780,6 +781,7 @@ public class NNStreamerActivity extends Activity implements
             }
         });
 
+        /* Real-Time Spinner */
         left_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -800,6 +802,7 @@ public class NNStreamerActivity extends Activity implements
             }
         });
 
+        /* Real-Time Spinner */
         right_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -957,6 +960,9 @@ public class NNStreamerActivity extends Activity implements
         builder.show();
     }
 
+    /**
+     * Voice Recognition Auto Start.
+     */
     private void enableAutoStart() {
         for (Intent intent : Constants.AUTO_START_INTENTS) {
             if (getPackageManager().resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY) != null) {
@@ -983,18 +989,5 @@ public class NNStreamerActivity extends Activity implements
                 break;
             }
         }
-    }
-
-    public boolean checkServiceRunning() {
-        ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
-        if (manager != null) {
-            for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(
-                    Integer.MAX_VALUE)) {
-                if (getString(R.string.my_service_name).equals(service.service.getClassName())) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 }
