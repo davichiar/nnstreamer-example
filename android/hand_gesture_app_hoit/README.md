@@ -207,6 +207,51 @@ development Status
 - Command mapping for each gesture
 
 
+### 2020.10.03
+
+- Preparing for presentation 
+
+
+### 2020.10.08 
+
+- planning additional functions of the application.
+
+
+### 2020.10.12 
+
+- The plan was decided.
+1. An app in Ubuntu environment that performs the same function
+2. Add voice recognition function.
+
+
+### 2020.10.14
+
+- Voice recognition demo version has been developed.
+- The data storage problem was solved through "Shared Preference".
+
+
+### 2020.10.15
+
+- Running Gstreamer tutorials and examples in Ubuntu environment
+
+
+### 2020.10.16
+
+- Final development of voice recognition function has been completed.
+- We used Google API for voice recognition.
+- Nnstreamer development in Ubuntu environment is in progress
+
+
+### 2020.10.17 
+
+- Failed to build nnstreamer in Ubuntu environment
+  : Due to dependency problem
+
+
+### 2020.10.18 
+
+- Preparing for presentation 
+
 ```
 
 
