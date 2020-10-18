@@ -221,12 +221,12 @@ development Status
 
 - The plan was decided.
 1. An app in Ubuntu environment that performs the same function
-2. Add voice recognition function.
+2. Add speech recognition function.
 
 
 ### 2020.10.14
 
-- Voice recognition demo version has been developed.
+- Speech recognition demo version has been developed.
 - The data storage problem was solved through "Shared Preference".
 
 
@@ -237,8 +237,8 @@ development Status
 
 ### 2020.10.16
 
-- Final development of voice recognition function has been completed.
-- We used Google API for voice recognition.
+- Final development of speech recognition function has been completed.
+- We used Google API for speech recognition.
 - Nnstreamer development in Ubuntu environment is in progress
 
 
